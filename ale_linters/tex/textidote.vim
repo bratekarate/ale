@@ -29,11 +29,8 @@ function! ale_linters#tex#textidote#GetExecutable(buffer) abort
                     \ }
         
         let l:check_lang = get(l:langs, l:check_lang, 'en')
-
         let l:exe .= ' --check ' . l:check_lang
     endif
-
-    echo l:exe
 
     return l:exe . ' ' . expand('#' . a:buffer . ':t')
 endfunction
