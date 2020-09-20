@@ -2,35 +2,39 @@
 " Description: support for textidote grammar and syntax checker
 
 call ale#Set('tex_textidote_executable', 'textidote')
-" TODO: read user provided global variable for args instead of hardcoding
-" languagemodel, ignorelist and remove-macros
-call ale#Set('tex_textidote_options', '--no-color --languagemodel ~/ngram --ignore sh:seclen --remove-macros parencite --read-all --output singleline')
-call ale#Set('tex_textidote_check_lang', &spelllang)
+" No non-overwritable defaults for options. --output and
+" --no-color must not be overriden by user defined global variables as it will
+"  break linting.
+call ale#Set('tex_textidote_options', '')
+call ale#Set('tex_textidote_read_all', 0)
+
+let s:langs = {
+            \ 'en': 'en',
+            \ 'en_us': 'en_US',
+            \ 'en_gb': 'en_UK',
+            \ 'en_ca': 'en_CA',
+            \ 'fr': 'fr',
+            \ 'de': 'de_DE',
+            \ 'de_ch': 'de_CH',
+            \ 'de_at': 'de_AT',
+            \ 'nl': 'nl',
+            \ 'pt': 'pt',
+            \ 'pt_br': 'pt_BR',
+            \ }
 
 function! ale_linters#tex#textidote#GetExecutable(buffer) abort
     let l:exe = ale#Var(a:buffer, 'tex_textidote_executable')
-    let l:exe .= ' ' . ale#Var(a:buffer, 'tex_textidote_options')
+    let l:opts = '--output singleline --no-color ' . ale#Var(a:buffer, 'tex_textidote_options')
 
-    let l:check_lang = ale#Var(a:buffer, 'tex_textidote_check_lang')
-
-    if !empty(l:check_lang)
-        let l:langs = {
-                    \ "en": "en",
-                    \ "en_us": "en_US",
-                    \ "en_gb": "en_UK",
-                    \ "en_ca": "en_CA",
-                    \ "fr": "fr",
-                    \ "de": "de_DE",
-                    \ "de_ch": "de_CH",
-                    \ "de_at": "de_AT",
-                    \ "nl": "nl",
-                    \ "pt": "pt",
-                    \ "pt_br": "pt_BR",
-                    \ }
-        
-        let l:check_lang = get(l:langs, l:check_lang, 'en')
-        let l:exe .= ' --check ' . l:check_lang
+    if ale#Var(a:buffer, 'tex_textidote_read_all')
+        let l:opts .= ' --read-all'
     endif
+
+    let l:check_lang_opt = get(g:, 'ale_tex_textidote_check_lang', &spelllang)
+    let l:check_lang = get(s:langs, l:check_lang_opt, 'en')
+    let opts .= ' --check ' . l:check_lang
+
+    let l:exe .= ' ' . l:opts
 
     return l:exe . ' ' . expand('#' . a:buffer . ':t')
 endfunction
