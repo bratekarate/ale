@@ -5,6 +5,7 @@
 # Use `git add -f` to add hidden files.
 .*
 /doc/tags
+/tags*
 /init.vim
 /test/ale-info-test-file
 /vader_output
