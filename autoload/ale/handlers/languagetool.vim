@@ -28,6 +28,11 @@ function! ale#handlers#languagetool#HandleOutput(buffer, lines) abort
     let l:message_matches = ale#util#GetMatches(a:lines, l:message_pattern)
 
     " Match lines like:
+    " Suggestion: Suggestion 1; Suggestion 2; Suggestion 3; ...
+    let l:suggest_pattern = '^\v(Suggestion. .+)$'
+    let l:suggest_matches = ale#util#GetMatches(a:lines, l:suggest_pattern)
+
+    " Match lines like:
     "   ^^^^^ "
     let l:markers_pattern = '^\v *(\^+) *$'
     let l:markers_matches = ale#util#GetMatches(a:lines, l:markers_pattern)
@@ -45,13 +50,19 @@ function! ale#handlers#languagetool#HandleOutput(buffer, lines) abort
     \       (len(l:head_matches) == len(l:markers_matches))
     \       && (len(l:head_matches) == len(l:message_matches))
     \   )
+        let l:text = l:message_matches[l:i][1]
+
+        if (len(l:head_matches) == len(l:suggest_matches))
+            let l:text .= ' ' . l:suggest_matches[l:i][1]
+        endif
+
         let l:item = {
         \   'lnum'    : str2nr(l:head_matches[l:i][1]),
         \   'col'     : str2nr(l:head_matches[l:i][2]),
         \   'end_col' : str2nr(l:head_matches[l:i][2]) + len(l:markers_matches[l:i][1])-1,
         \   'type'    : 'W',
         \   'code'    : l:head_matches[l:i][3],
-        \   'text'    : l:message_matches[l:i][1]
+        \   'text'    : l:text
         \}
         call add(l:output, l:item)
         let l:i+=1
